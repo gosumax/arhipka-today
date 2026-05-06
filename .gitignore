@@ -1,0 +1,35 @@
+dist/
+node_modules/
+.env
+.env.*
+*.map
+dev-server*.log
+*-check.png
+audit/
+audit/tmp-lh/
+seo-snapshots_BACKUP/
+*.backup.*
+__findstr*
+temp-segment.txt
+*.log
+*.tmp
+.cache/
+.tmp/
+tmp/
+temp/
+chrome-profile*/
+Chrome*/User Data/
+Default/Cache/
+Default/Code Cache/
+Default/GPUCache/
+Default/Service Worker/
+BrowserMetrics/
+Crashpad/
+ShaderCache/
+GrShaderCache/
+GraphiteDawnCache/
+component_crx_cache/
+optimization_guide_prediction_model_downloads/
+fotoref/*.png
+videoref/hero-beach.mp4
+videoref/kling_*.mp4

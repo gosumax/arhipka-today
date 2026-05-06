@@ -1,0 +1,11 @@
+{
+  "name": "arkhipo-osipovka-today",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "build": "node scripts/build.mjs",
+    "check:home": "node scripts/validate-home.mjs"
+  }
+}
