@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { extname, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { brotliCompressSync, constants as zlibConstants, gzipSync } from "node:zlib";
+import { injectYandexMetrika } from "./analytics.mjs";
 import { activitiesCatalog } from "./activities-catalog.js";
 import {
   categoryPages,
@@ -580,7 +581,7 @@ createServer(async (req, res) => {
       );
       sendResponse(req, res, {
         status: 200,
-        body: homeHtml,
+        body: injectYandexMetrika(homeHtml),
         contentType: contentTypes[".html"],
         cacheControl: "public, max-age=300"
       });
@@ -612,7 +613,7 @@ createServer(async (req, res) => {
       );
       sendResponse(req, res, {
         status: 200,
-        body: html,
+        body: injectYandexMetrika(html),
         contentType: contentTypes[".html"],
         cacheControl: "public, max-age=300"
       });

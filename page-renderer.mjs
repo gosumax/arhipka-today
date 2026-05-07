@@ -8,6 +8,7 @@ import {
   renderUnifiedHeroHeader,
   renderUnifiedServiceHeader
 } from "./hero-header-shell.mjs";
+import { injectYandexMetrika } from "./analytics.mjs";
 
 export const imageClassByKey = {
   sea: "sea-bg",
@@ -156,7 +157,7 @@ function renderPage({ title, description, canonicalPath, body, jsonLd, bodyClass
   const socialImageUrl = `${canonicalBaseUrl}/fotoref/more-hero.jpg`;
   const ogType = canonicalUrl === `${canonicalBaseUrl}/travel/` ? "website" : "article";
   const bodyClassAttr = bodyClass ? ` class="${escapeHtml(bodyClass)}"` : "";
-  return `<!doctype html>
+  return injectYandexMetrika(`<!doctype html>
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
@@ -189,7 +190,7 @@ function renderPage({ title, description, canonicalPath, body, jsonLd, bodyClass
     <script src="/hero-media.js?v=20260507-mobile-menu-close" defer></script>
     <script src="/legal.js" defer></script>
   </body>
-</html>`;
+</html>`);
 }
 
 function renderList(items = []) {

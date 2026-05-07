@@ -6,6 +6,7 @@ import {
   renderUnifiedHeroActions,
   renderUnifiedHeroHeader
 } from "./hero-header-shell.mjs";
+import { injectYandexMetrika } from "./analytics.mjs";
 const canonicalBaseUrl = "https://arhipka-today.ru";
 
 const escapeHtml = (value = "") => String(value).replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[char]);
@@ -670,7 +671,7 @@ function renderPage(page) {
     "</main>"
   ].join("");
 
-  return `<!doctype html>
+  return injectYandexMetrika(`<!doctype html>
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
@@ -700,7 +701,7 @@ ${pageJsonLdScripts}
     <script src="/hero-media.js?v=20260507-mobile-menu-close" defer></script>
     <script src="/legal.js" defer></script>
   </body>
-</html>`;
+</html>`);
 }
 
 export function renderNewSeoPage(pathname) {
