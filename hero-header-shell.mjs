@@ -1,43 +1,43 @@
-﻿const quadHref = "/travel/kvadrotsikly-ekstrim/";
+const quadHref = "/travel/kvadrotsikly-ekstrim/";
 
 export const contactPhone = "+7 979 033-97-39";
 export const contactPhoneHref = "+79790339739";
 export const maxLink = "https://max.ru/u/f9LHodD0cOKLzWwiUsSgrCMCJuT_ZWsnGPwU8AH5qBO8vgOCIXlfd98nK";
 
 export const headerNavItems = [
-  { href: "/morskie-progulki/", label: "РњРѕСЂСЃРєРёРµ РїСЂРѕРіСѓР»РєРё" },
-  { href: "/vodopady/", label: "Р’РѕРґРѕРїР°РґС‹" },
-  { href: "/ekskursii/", label: "Р­РєСЃРєСѓСЂСЃРёРё" },
-  { href: quadHref, label: "РљРІР°РґСЂРѕ Рё СЌРЅРґСѓСЂРѕ" },
-  { href: "/s-detmi/", label: "РЎ РґРµС‚СЊРјРё" },
-  { href: "/pogoda/", label: "РџРѕРіРѕРґР°" },
-  { href: "/kontakty/", label: "РљРѕРЅС‚Р°РєС‚С‹" }
+  { href: "/morskie-progulki/", label: "Морские прогулки" },
+  { href: "/vodopady/", label: "Водопады" },
+  { href: "/ekskursii/", label: "Экскурсии" },
+  { href: quadHref, label: "Квадро и эндуро" },
+  { href: "/s-detmi/", label: "С детьми" },
+  { href: "/pogoda/", label: "Погода" },
+  { href: "/kontakty/", label: "Контакты" }
 ];
 
-const footerDescription = "Р›РѕРєР°Р»СЊРЅС‹Р№ РіРёРґ РїРѕ РѕС‚РґС‹С…Сѓ: РјРѕСЂРµ, РІРѕРґРѕРїР°РґС‹, РјР°СЂС€СЂСѓС‚С‹ Рё РёРґРµРё РґР»СЏ СЃРµРјРµР№РЅРѕРіРѕ РґРѕСЃСѓРіР°.";
+const footerDescription = "Локальный гид по отдыху: море, водопады, маршруты и идеи для семейного досуга.";
 
 export const footerPopularLinks = [
-  { href: "/otdyh/", label: "РћС‚РґС‹С… РІ РђСЂС…РёРїРѕ-РћСЃРёРїРѕРІРєРµ" },
-  { href: "/pogoda/", label: "РџРѕРіРѕРґР° Рё С‚РµРјРїРµСЂР°С‚СѓСЂР° РјРѕСЂСЏ" },
-  { href: "/morskie-progulki/", label: "РњРѕСЂСЃРєРёРµ РїСЂРѕРіСѓР»РєРё" },
-  { href: "/vodopady/", label: "Р’РѕРґРѕРїР°РґС‹" },
-  { href: "/ekskursii/", label: "Р­РєСЃРєСѓСЂСЃРёРё" },
-  { href: "/s-detmi/", label: "РЎ РґРµС‚СЊРјРё" },
-  { href: quadHref, label: "РљРІР°РґСЂРѕ Рё СЌРЅРґСѓСЂРѕ" },
-  { href: "/kuda-shodit/", label: "РљСѓРґР° СЃС…РѕРґРёС‚СЊ" },
-  { href: "/progulka-na-zakate-arhipo-osipovka/", label: "РџСЂРѕРіСѓР»РєР° РЅР° Р·Р°РєР°С‚Рµ" },
-  { href: "/iz-krasnodara/", label: "РР· РљСЂР°СЃРЅРѕРґР°СЂР°" }
+  { href: "/otdyh/", label: "Отдых в Архипо-Осиповке" },
+  { href: "/pogoda/", label: "Погода и температура моря" },
+  { href: "/morskie-progulki/", label: "Морские прогулки" },
+  { href: "/vodopady/", label: "Водопады" },
+  { href: "/ekskursii/", label: "Экскурсии" },
+  { href: "/s-detmi/", label: "С детьми" },
+  { href: quadHref, label: "Квадро и эндуро" },
+  { href: "/kuda-shodit/", label: "Куда сходить" },
+  { href: "/progulka-na-zakate-arhipo-osipovka/", label: "Прогулка на закате" },
+  { href: "/iz-krasnodara/", label: "Из Краснодара" }
 ];
 
 const footerDocumentLinks = [
-  { href: "/privacy/", label: "РџРѕР»РёС‚РёРєР° РѕР±СЂР°Р±РѕС‚РєРё РїРµСЂСЃРѕРЅР°Р»СЊРЅС‹С… РґР°РЅРЅС‹С…" },
-  { href: "/personal-data-consent/", label: "РЎРѕРіР»Р°СЃРёРµ РЅР° РѕР±СЂР°Р±РѕС‚РєСѓ РїРµСЂСЃРѕРЅР°Р»СЊРЅС‹С… РґР°РЅРЅС‹С…" },
-  { href: "/marketing-consent/", label: "РЎРѕРіР»Р°СЃРёРµ РЅР° РїРѕР»СѓС‡РµРЅРёРµ СЂРµРєР»Р°РјРЅС‹С… СЃРѕРѕР±С‰РµРЅРёР№" },
-  { href: "/cookie-policy/", label: "РџРѕР»РёС‚РёРєР° cookie" },
-  { href: "/kontakty/", label: "РљРѕРЅС‚Р°РєС‚С‹" }
+  { href: "/privacy/", label: "Политика обработки персональных данных" },
+  { href: "/personal-data-consent/", label: "Согласие на обработку персональных данных" },
+  { href: "/marketing-consent/", label: "Согласие на получение рекламных сообщений" },
+  { href: "/cookie-policy/", label: "Политика cookie" },
+  { href: "/kontakty/", label: "Контакты" }
 ];
 
-const quadCard = '<a class="seo-link-card" href="/travel/kvadrotsikly-ekstrim/" aria-label="РљРІР°РґСЂРѕ Рё СЌРЅРґСѓСЂРѕ"><span class="seo-link-title">РљРІР°РґСЂРѕ Рё СЌРЅРґСѓСЂРѕ</span><span class="seo-link-teaser">РљРІР°РґСЂРѕС†РёРєР»С‹, СЌРЅРґСѓСЂРѕ Рё Р°РєС‚РёРІРЅС‹Рµ РјР°СЂС€СЂСѓС‚С‹ 2,5-3 С‡Р°СЃР°.</span><span class="seo-link-cta" aria-hidden="true">в†’</span></a>';
+const quadCard = '<a class="seo-link-card" href="/travel/kvadrotsikly-ekstrim/" aria-label="Квадро и эндуро"><span class="seo-link-title">Квадро и эндуро</span><span class="seo-link-teaser">Квадроциклы, эндуро и активные маршруты 2,5-3 часа.</span><span class="seo-link-cta" aria-hidden="true">→</span></a>';
 
 function normalizePrimaryHref(href = "") {
   const value = String(href || "").trim();
@@ -49,16 +49,16 @@ function renderMenuItems() {
 }
 
 function renderBrand(brandHref = "/travel/") {
-  return `<a class="brand" href="${brandHref}" aria-label="РђСЂС…РёРїРѕ-РћСЃРёРїРѕРІРєР° СЃРµРіРѕРґРЅСЏ"><span class="brand-mark" aria-hidden="true"><picture><source type="image/webp" srcset="/fotoref/logo.webp" /><img src="/fotoref/logo.webp" alt="" /></picture></span><span><strong>РђСЂС…РёРїРѕ-РћСЃРёРїРѕРІРєР°</strong><small>СЃРµРіРѕРґРЅСЏ</small></span></a>`;
+  return `<a class="brand" href="${brandHref}" aria-label="Архипо-Осиповка сегодня"><span class="brand-mark" aria-hidden="true"><picture><source type="image/webp" srcset="/fotoref/logo.webp" /><img src="/fotoref/logo.webp" alt="" /></picture></span><span><strong>Архипо-Осиповка</strong><small>сегодня</small></span></a>`;
 }
 
 function renderHeaderActions() {
-  return `<div class="header-actions"><a class="button button-ghost header-call-button" href="tel:${contactPhoneHref}">РџРѕР·РІРѕРЅРёС‚СЊ</a><a class="button button-ghost header-call-button" href="${maxLink}" target="_blank" rel="noopener noreferrer">MAX</a></div>`;
+  return `<div class="header-actions"><a class="button button-ghost header-call-button" href="tel:${contactPhoneHref}">Позвонить</a><a class="button button-ghost header-call-button" href="${maxLink}" target="_blank" rel="noopener noreferrer">MAX</a></div>`;
 }
 
 function renderMobileActions(primaryHref = "#popular") {
   const href = normalizePrimaryHref(primaryHref);
-  return `<div class="mobile-menu-actions"><a class="button button-ghost" href="tel:${contactPhoneHref}">РџРѕР·РІРѕРЅРёС‚СЊ</a><a class="button button-primary" href="${href}">Р’С‹Р±СЂР°С‚СЊ РЅР°РїСЂР°РІР»РµРЅРёРµ</a><a class="button button-ghost" href="${maxLink}" target="_blank" rel="noopener noreferrer">MAX</a></div>`;
+  return `<div class="mobile-menu-actions"><a class="button button-ghost" href="tel:${contactPhoneHref}">Позвонить</a><a class="button button-primary" href="${href}">Выбрать направление</a><a class="button button-ghost" href="${maxLink}" target="_blank" rel="noopener noreferrer">MAX</a></div>`;
 }
 
 function renderFooterLinks(items = []) {
@@ -78,17 +78,17 @@ function renderFooterColumn(title, items) {
 export function renderUnifiedFooter({ homeHref = "/travel/", footerClassName = "site-footer section-card" } = {}) {
   return [
     `<footer class="${footerClassName}" id="contacts">`,
-    `<div class="footer-brand"><a class="brand" href="${homeHref}"><span class="brand-mark" aria-hidden="true"><picture><source type="image/webp" srcset="/fotoref/logo.webp" /><img src="/fotoref/logo.webp" alt="" /></picture></span><span><strong>РђСЂС…РёРїРѕ-РћСЃРёРїРѕРІРєР° СЃРµРіРѕРґРЅСЏ</strong></span></a><p>${footerDescription}</p></div>`,
-    renderFooterColumn("РџРѕРїСѓР»СЏСЂРЅРѕРµ", footerPopularLinks),
-    renderFooterColumn("Р”РѕРєСѓРјРµРЅС‚С‹", footerDocumentLinks),
-    `<div><h3>РљРѕРЅС‚Р°РєС‚С‹</h3><a class="text-button phone-reveal-button" href="tel:${contactPhoneHref}">${contactPhone}</a><a href="${maxLink}" target="_blank" rel="noopener noreferrer">MAX</a><p class="contact-legal">Р”Р»СЏ Р±С‹СЃС‚СЂРѕРіРѕ РїРѕРґР±РѕСЂР° РјР°СЂС€СЂСѓС‚Р° РЅР°РїРёС€РёС‚Рµ РІ MAX РёР»Рё РїРѕР·РІРѕРЅРёС‚Рµ: РѕС‚РІРµС‚РёРј РїРѕ РїРѕРіРѕРґРµ, С„РѕСЂРјР°С‚Сѓ Рё РІСЂРµРјРµРЅРё РѕС‚РґС‹С…Р°.</p></div>`,
+    `<div class="footer-brand"><a class="brand" href="${homeHref}"><span class="brand-mark" aria-hidden="true"><picture><source type="image/webp" srcset="/fotoref/logo.webp" /><img src="/fotoref/logo.webp" alt="" /></picture></span><span><strong>Архипо-Осиповка сегодня</strong></span></a><p>${footerDescription}</p></div>`,
+    renderFooterColumn("Популярное", footerPopularLinks),
+    renderFooterColumn("Документы", footerDocumentLinks),
+    `<div><h3>Контакты</h3><a class="text-button phone-reveal-button" href="tel:${contactPhoneHref}">${contactPhone}</a><a href="${maxLink}" target="_blank" rel="noopener noreferrer">MAX</a><p class="contact-legal">Для быстрого подбора маршрута напишите в MAX или позвоните: ответим по погоде, формату и времени отдыха.</p></div>`,
     "</footer>"
   ].join("");
 }
 
 export function renderUnifiedHeroActions({ primaryHref = "#popular", classTail = "" } = {}) {
   const href = normalizePrimaryHref(primaryHref);
-  return `<div class="hero-actions${classTail}"><a class="button button-primary" href="${href}">Р’С‹Р±СЂР°С‚СЊ РЅР°РїСЂР°РІР»РµРЅРёРµ</a><a class="button button-ghost" href="tel:${contactPhoneHref}">РџРѕР·РІРѕРЅРёС‚СЊ</a><a class="button button-ghost" href="${maxLink}" target="_blank" rel="noopener noreferrer">MAX</a></div>`;
+  return `<div class="hero-actions${classTail}"><a class="button button-primary" href="${href}">Выбрать направление</a><a class="button button-ghost" href="tel:${contactPhoneHref}">Позвонить</a><a class="button button-ghost" href="${maxLink}" target="_blank" rel="noopener noreferrer">MAX</a></div>`;
 }
 
 function renderNav(className, ariaLabel) {
@@ -99,12 +99,12 @@ function renderHeader({ headerClass, brandHref, primaryHref }) {
   return [
     `<header class="${headerClass}">`,
     renderBrand(brandHref),
-    renderNav("main-nav", "РћСЃРЅРѕРІРЅР°СЏ РЅР°РІРёРіР°С†РёСЏ"),
+    renderNav("main-nav", "Основная навигация"),
     renderHeaderActions(),
     '<details class="mobile-menu">',
-    '<summary class="mobile-menu-toggle" aria-label="РћС‚РєСЂС‹С‚СЊ РјРµРЅСЋ"><span class="mobile-menu-toggle-icon" aria-hidden="true"></span><span class="sr-only">РћС‚РєСЂС‹С‚СЊ РјРµРЅСЋ</span></summary>',
+    '<summary class="mobile-menu-toggle" aria-label="Открыть меню"><span class="mobile-menu-toggle-icon" aria-hidden="true"></span><span class="sr-only">Открыть меню</span></summary>',
     '<div class="mobile-menu-panel">',
-    renderNav("mobile-menu-nav", "РњРѕР±РёР»СЊРЅР°СЏ РЅР°РІРёРіР°С†РёСЏ"),
+    renderNav("mobile-menu-nav", "Мобильная навигация"),
     renderMobileActions(primaryHref),
     "</div>",
     "</details>",
@@ -164,4 +164,3 @@ export function ensureQuadDirectionCard(html) {
     return `${start}${quadCard}${end}`;
   });
 }
-
