@@ -14,6 +14,7 @@ export const HOME_SECTION_ORDER = [
 
 const activitiesById = new Map(activitiesCatalog.map((activity) => [activity.id, activity]));
 const seoPagesByPath = new Map(newSeoPages.map((page) => [page.path, page]));
+const googleMapSearchUrl = (query = "") => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 
 const seoCardEntries = newSeoPages.flatMap((page) =>
   (page.blocks || []).flatMap((block) =>
@@ -26,9 +27,7 @@ const mapPointByTitle = new Map(seoCardEntries.map((entry) => [entry.card.title,
 
 function getActivityCardBase(activityId, overrides = {}) {
   const activity = activitiesById.get(activityId);
-  if (!activity) {
-    throw new Error(`home-blocks: activity not found: ${activityId}`);
-  }
+  if (!activity) return null;
 
   const shortDescription = activity.shortDescription || activity.short || activity.description || "";
   const valueFromIncludes = Array.isArray(activity.includes) && activity.includes.length
@@ -55,6 +54,10 @@ function getActivityCardBase(activityId, overrides = {}) {
   };
 }
 
+function compactCards(cards = []) {
+  return cards.filter(Boolean);
+}
+
 function getMapPointCardBase(title, overrides = {}) {
   const sourceEntry = mapPointByTitle.get(title);
   const sourceCard = sourceEntry?.card;
@@ -63,6 +66,8 @@ function getMapPointCardBase(title, overrides = {}) {
   }
   const sourcePath = sourceEntry?.page?.path || "/chto-posmotret-v-arhipo-osipovke";
   const sourceHref = sourcePath.endsWith("/") ? sourcePath : `${sourcePath}/`;
+  const sourceRouteQuery = sourceCard.routeQuery || "";
+  const routeHref = sourceRouteQuery ? googleMapSearchUrl(sourceRouteQuery) : sourceHref;
 
   return {
     id: `map-${String(title).toLowerCase().replace(/[^a-zа-я0-9]+/gi, "-").replace(/^-+|-+$/g, "")}`,
@@ -74,7 +79,7 @@ function getMapPointCardBase(title, overrides = {}) {
     value: "Готовая точка на карте и удобный сценарий для прогулки",
     important: "Режим работы и доступность лучше проверить в день посещения.",
     cta: "Открыть в Google Maps",
-    href: sourceHref,
+    href: routeHref,
     sourceMeta: {
       source: "seo-new-pages.mjs",
       seoPath: sourcePath,
@@ -183,7 +188,7 @@ const quickChoiceCards = [
     value: "Быстрый переход к прогулочным точкам рядом с курортом",
     important: "Комфортнее выбирать утро или вечер в жаркий день.",
     cta: "Смотреть прогулки",
-    href: "/kuda-shodit/",
+    href: "/travel/#realnye-tochki-i-marshruty",
     entityLabel: "Приморский бульвар и прогулочные места в Архипо-Осиповке",
     sourceMeta: {
       source: "seo-new-pages.mjs",
@@ -373,7 +378,7 @@ const bySituationCards = [
     value: "Легкий маршрут без перегрева",
     important: "Лучше планировать утро, тень и вечерние блоки.",
     cta: "Посмотреть варианты",
-    href: "/arhipo-osipovka-za-odin-den/",
+    href: "/kuda-shodit/#esli-zharko",
     sourceMeta: {
       source: "seo-new-pages.mjs",
       seoPath: "/arhipo-osipovka-za-odin-den"
@@ -405,7 +410,7 @@ const bySituationCards = [
     value: "Пешие и близкие сценарии без сложной логистики",
     important: "Проверяйте расстояние и обратный путь заранее.",
     cta: "Посмотреть варианты",
-    href: "/kuda-shodit/",
+    href: "/kuda-shodit/#esli-bez-mashiny",
     sourceMeta: {
       source: "seo-new-pages.mjs",
       seoPath: "/kuda-shodit"
@@ -421,7 +426,7 @@ const bySituationCards = [
     value: "Бесплатные точки и прогулочные сценарии",
     important: "Комфортнее выбирать утро или вечер в жаркий день.",
     cta: "Посмотреть варианты",
-    href: "/chto-posmotret-v-arhipo-osipovke/",
+    href: "/kuda-shodit/#besplatno-pogulyat",
     sourceMeta: {
       source: "seo-new-pages.mjs",
       seoPath: "/chto-posmotret-v-arhipo-osipovke"
@@ -437,7 +442,6 @@ const mapPointsCards = [
     price: "бесплатно",
     audience: "Семьи, пары, друзья",
     important: "Комфортнее утром или после дневной жары.",
-    href: "/kuda-shodit/",
     cta: "Маршрут",
     imageClass: "map-primorsky-bg",
     entityLabel: "Приморский бульвар в Архипо-Осиповке, Краснодарский край"
@@ -449,7 +453,6 @@ const mapPointsCards = [
     price: "бесплатно",
     audience: "Пары, друзья, любители фото",
     important: "Лучше ехать в ясную погоду к закату или утром.",
-    href: "/kuda-shodit-vecherom-v-arhipo-osipovke/",
     cta: "Маршрут",
     imageClass: "map-ezhik-bg",
     entityLabel: "Гора Ёжик и вид на море в Архипо-Осиповке"
@@ -460,7 +463,6 @@ const mapPointsCards = [
     price: "уточнить стоимость входа",
     audience: "Семьи, гости с интересом к истории",
     important: "Проверьте режим работы и билеты в день посещения.",
-    href: "/chto-posmotret-v-arhipo-osipovke/",
     cta: "Маршрут",
     imageClass: "map-fort-bg",
     entityLabel: "Михайловское укрепление в Архипо-Осиповке"
@@ -471,7 +473,6 @@ const mapPointsCards = [
     price: "уточнить",
     audience: "Семьи, пары",
     important: "Режим и стоимость посещения лучше уточнять заранее.",
-    href: "/chto-posmotret-v-arhipo-osipovke/#muzei-hleba-i-vina",
     cta: "Маршрут",
     imageClass: "map-museum-bg",
     entityLabel: "Музей хлеба и вина в Архипо-Осиповке"
@@ -482,7 +483,6 @@ const mapPointsCards = [
     price: "бесплатно",
     audience: "Пары, семьи, друзья",
     important: "Комфортно за 30-60 минут до заката.",
-    href: "/kuda-shodit-vecherom-v-arhipo-osipovke/#centralnyi-plyazh-na-zakate",
     cta: "Маршрут",
     imageClass: "map-sunset-beach-bg",
     entityLabel: "Центральный пляж Архипо-Осиповки на закате"
@@ -493,14 +493,13 @@ const mapPointsCards = [
     price: "бесплатно",
     audience: "Семьи с детьми, пары",
     important: "Подходит как короткая прогулка в спокойном темпе.",
-    href: "/arhipo-osipovka-za-odin-den/",
     cta: "Маршрут",
     imageClass: "map-vulan-bridge-bg",
     entityLabel: "Подвесной мост через реку Вулан в Архипо-Осиповке"
   })
 ];
 
-const seaTripsCards = [
+const seaTripsCards = compactCards([
   getActivityCardBase("classic-boat-1h", {
     title: "Катер 1 час",
     description: "Спокойная прогулка на катере к красивым морским точкам.",
@@ -542,9 +541,9 @@ const seaTripsCards = [
     title: "Индивидуальный катер",
     cta: "Узнать расписание"
   })
-];
+]);
 
-const familyCards = [
+const familyCards = compactCards([
   {
     id: "family-guide",
     title: "Семейный маршрут без перегруза",
@@ -574,9 +573,9 @@ const familyCards = [
     id: "family-bus-tour",
     cta: "Смотреть обзорный формат"
   })
-];
+]);
 
-const activeCards = [
+const activeCards = compactCards([
   {
     id: "active-direction",
     title: "Квадро и эндуро",
@@ -620,7 +619,7 @@ const activeCards = [
     description: "Море, сап-борд и подводный мир.",
     cta: "Смотреть"
   })
-];
+]);
 
 const faqTrustCards = [
   {
@@ -763,7 +762,7 @@ export const HOME_BLOCKS = {
     title: "Реальные точки и маршруты на карте",
     action: {
       label: "Смотреть все точки на карте",
-      href: "/chto-posmotret-v-arhipo-osipovke/"
+      href: "/chto-posmotret-v-arhipo-osipovke/#realnye-tochki-i-marshruty-na-karte"
     },
     cards: mapPointsCards
   },
@@ -790,17 +789,17 @@ export const HOME_BLOCKS = {
         {
           title: "Пляжи для детей",
           description: "Мелкое море и удобный вход",
-          href: "/s-detmi/"
+          href: "/s-detmi/#plyazhi-dlya-detey"
         },
         {
           title: "Развлечения и парки",
           description: "Аквапарк, аттракционы и игровые площадки",
-          href: "/s-detmi/"
+          href: "/s-detmi/#razvlecheniya-i-parki"
         },
         {
           title: "Кафе и питание",
           description: "Где вкусно и удобно накормить детей",
-          href: "/s-detmi/"
+          href: "/s-detmi/#kafe-i-pitanie"
         }
       ]
     },

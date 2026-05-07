@@ -407,13 +407,23 @@ function getEntityDataValue(label) {
     .replace(/^-+|-+$/g, "");
 }
 
+function isEagerActivityCard(activity) {
+  return activity?.id === "sup-vulan" || activity?.slug === "sup-vulan";
+}
+
+function resolveActivityImageClass(activity) {
+  if (activity?.id === "sup-vulan" || activity?.slug === "sup-vulan") return "sup-vulan-bg";
+  return imageClassByKey[activity?.imageKey] || "route-bg";
+}
+
 export function renderActivityCard(activity, compact = true) {
-  const imageClass = imageClassByKey[activity.imageKey] || "route-bg";
+  const imageClass = resolveActivityImageClass(activity);
   const tags = [...(activity.bestFor || []), ...(activity.tags || [])].slice(0, 3);
   const entityLabel = getActivityEntityLabel(activity);
+  const lazyClass = isEagerActivityCard(activity) ? "" : " card-photo-lazy";
   return [
     `<a class="activity-card${compact ? " activity-card-compact" : ""}" href="${getActivityPath(activity)}" aria-label="${escapeHtml(activity.title)}">`,
-    `<div class="activity-cover image-placeholder card-photo ${imageClass} card-photo-lazy" role="img" aria-label="${escapeHtml(entityLabel)}" data-entity="${escapeHtml(getEntityDataValue(entityLabel))}"><span class="badge badge-float">${escapeHtml(activity.category)}</span></div>`,
+    `<div class="activity-cover image-placeholder card-photo ${imageClass}${lazyClass}" role="img" aria-label="${escapeHtml(entityLabel)}" data-entity="${escapeHtml(getEntityDataValue(entityLabel))}"><span class="badge badge-float">${escapeHtml(activity.category)}</span></div>`,
     '<div class="activity-body">',
     `<div class="activity-title-row"><h3>${escapeHtml(activity.title)}</h3><span class="format-badge">${escapeHtml(activity.format || "Формат")}</span></div>`,
     `<p>${escapeHtml(activity.shortDescription || activity.short || "")}</p>`,
@@ -513,7 +523,7 @@ export function renderLegalPage(pathname) {
 }
 
 export function renderServicePage(activity) {
-  const imageClass = imageClassByKey[activity.imageKey] || "route-bg";
+  const imageClass = resolveActivityImageClass(activity);
   const title = `${activity.title} в Архипо-Осиповке`;
   const serviceDescription = activity.description || activity.shortDescription || activity.short || "";
   const description = `${serviceDescription} Цена: ${activity.price}. Длительность: ${activity.duration}.`;

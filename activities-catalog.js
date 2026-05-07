@@ -1432,6 +1432,453 @@ const activityOverridesBySlug = {
   }
 };
 
+const CONTENT_FALLBACK_PATH = "/data/content-fallback.json";
+const CMS_REQUEST_TIMEOUT_MS = 8000;
+const DEFAULT_CMS_REFRESH_MS = 120000;
+const CMS_FIELDS = new Set([
+  "id",
+  "slug",
+  "title",
+  "short_title",
+  "category",
+  "price_from",
+  "price_text",
+  "duration_text",
+  "short_description",
+  "full_description",
+  "includes",
+  "schedule_text",
+  "image_key",
+  "image_url",
+  "cta_text",
+  "cta_url",
+  "is_active",
+  "sort_order",
+  "updated_at"
+]);
+const TRUE_VALUES = new Set(["1", "true", "yes", "y", "on", "да"]);
+const FALSE_VALUES = new Set(["0", "false", "no", "n", "off", "нет"]);
+
+function isNodeRuntime() {
+  return typeof process !== "undefined" && !!process.versions?.node;
+}
+
+function normalizeText(value) {
+  if (typeof value === "string") {
+    const normalized = value.replace(/\uFEFF/g, "").trim();
+    return normalized || undefined;
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+  return undefined;
+}
+
+function normalizeLookupKey(value) {
+  const text = normalizeText(value);
+  return text ? text.toLowerCase() : "";
+}
+
+function normalizeFieldName(fieldName) {
+  const text = normalizeText(fieldName);
+  if (!text) return "";
+  return text
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_")
+    .replace(/[^\w\u0400-\u04FF]+/g, "");
+}
+
+function normalizePositiveNumber(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const text = normalizeText(value);
+  if (!text) return undefined;
+  const normalized = text.replace(/[^\d.,-]/g, "").replace(",", ".");
+  const numeric = Number(normalized);
+  return Number.isFinite(numeric) ? numeric : undefined;
+}
+
+function normalizeBoolean(value, fallbackValue = true) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value !== 0;
+  const text = normalizeText(value);
+  if (!text) return fallbackValue;
+  const normalized = text.toLowerCase();
+  if (TRUE_VALUES.has(normalized)) return true;
+  if (FALSE_VALUES.has(normalized)) return false;
+  return fallbackValue;
+}
+
+function normalizeIsoDate(value) {
+  const text = normalizeText(value);
+  if (!text) return undefined;
+  const timestamp = Date.parse(text);
+  if (Number.isNaN(timestamp)) return undefined;
+  return new Date(timestamp).toISOString();
+}
+
+function normalizeIncludes(value) {
+  if (Array.isArray(value)) {
+    const list = value.map((item) => normalizeText(item)).filter(Boolean);
+    return list.length ? list : undefined;
+  }
+
+  const text = normalizeText(value);
+  if (!text) return undefined;
+
+  const list = text
+    .split(/\r?\n|[;|]+/g)
+    .map((item) => normalizeText(item))
+    .filter(Boolean);
+
+  return list.length ? list : undefined;
+}
+
+function parseCsvTable(csvText) {
+  const rows = [];
+  let row = [];
+  let cell = "";
+  let inQuotes = false;
+
+  for (let index = 0; index < csvText.length; index += 1) {
+    const char = csvText[index];
+    const nextChar = csvText[index + 1];
+
+    if (inQuotes) {
+      if (char === '"') {
+        if (nextChar === '"') {
+          cell += '"';
+          index += 1;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        cell += char;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      inQuotes = true;
+      continue;
+    }
+    if (char === ",") {
+      row.push(cell);
+      cell = "";
+      continue;
+    }
+    if (char === "\n") {
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = "";
+      continue;
+    }
+    if (char === "\r") continue;
+
+    cell += char;
+  }
+
+  if (cell.length || row.length) {
+    row.push(cell);
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+function normalizeContentRecord(rawRecord = {}, fallbackSortOrder = 0) {
+  if (!rawRecord || typeof rawRecord !== "object") return null;
+
+  const prepared = {};
+  for (const [fieldName, value] of Object.entries(rawRecord)) {
+    const key = normalizeFieldName(fieldName);
+    if (!CMS_FIELDS.has(key)) continue;
+    prepared[key] = value;
+  }
+
+  const id = normalizeText(prepared.id);
+  const slug = normalizeText(prepared.slug);
+  if (!id && !slug) return null;
+
+  const normalizedRecord = {
+    id: id || slug,
+    slug: slug || id
+  };
+
+  const title = normalizeText(prepared.title);
+  const shortTitle = normalizeText(prepared.short_title);
+  const category = normalizeText(prepared.category);
+  const priceText = normalizeText(prepared.price_text);
+  const durationText = normalizeText(prepared.duration_text);
+  const shortDescription = normalizeText(prepared.short_description);
+  const fullDescription = normalizeText(prepared.full_description);
+  const scheduleText = normalizeText(prepared.schedule_text);
+  const imageKey = normalizeText(prepared.image_key);
+  const imageUrl = normalizeText(prepared.image_url);
+  const ctaText = normalizeText(prepared.cta_text);
+  const ctaUrl = normalizeText(prepared.cta_url);
+  const priceFrom = normalizePositiveNumber(prepared.price_from);
+  const sortOrder = normalizePositiveNumber(prepared.sort_order);
+  const includes = normalizeIncludes(prepared.includes);
+  const updatedAt = normalizeIsoDate(prepared.updated_at);
+
+  if (title) normalizedRecord.title = title;
+  if (shortTitle) normalizedRecord.short_title = shortTitle;
+  if (category) normalizedRecord.category = category;
+  if (priceText) normalizedRecord.price_text = priceText;
+  if (Number.isFinite(priceFrom)) normalizedRecord.price_from = priceFrom;
+  if (durationText) normalizedRecord.duration_text = durationText;
+  if (shortDescription) normalizedRecord.short_description = shortDescription;
+  if (fullDescription) normalizedRecord.full_description = fullDescription;
+  if (includes) normalizedRecord.includes = includes;
+  if (scheduleText) normalizedRecord.schedule_text = scheduleText;
+  if (imageKey) normalizedRecord.image_key = imageKey;
+  if (imageUrl) normalizedRecord.image_url = imageUrl;
+  if (ctaText) normalizedRecord.cta_text = ctaText;
+  if (ctaUrl) normalizedRecord.cta_url = ctaUrl;
+  if (updatedAt) normalizedRecord.updated_at = updatedAt;
+  if (Number.isFinite(sortOrder)) {
+    normalizedRecord.sort_order = sortOrder;
+  } else if (fallbackSortOrder > 0) {
+    normalizedRecord.sort_order = fallbackSortOrder;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(prepared, "is_active")) {
+    normalizedRecord.is_active = normalizeBoolean(prepared.is_active, true);
+  }
+
+  return normalizedRecord;
+}
+
+function mergeRecordValues(baseRecord = {}, nextRecord = {}) {
+  const merged = { ...baseRecord };
+  for (const field of CMS_FIELDS) {
+    if (Object.prototype.hasOwnProperty.call(nextRecord, field) && nextRecord[field] !== undefined) {
+      merged[field] = nextRecord[field];
+    }
+  }
+  return merged;
+}
+
+function parseRecordsFromCsv(csvText) {
+  const table = parseCsvTable(csvText);
+  if (!table.length) return [];
+
+  const headerRow = table[0].map((header) => normalizeFieldName(header));
+  if (!headerRow.length) return [];
+
+  return table
+    .slice(1)
+    .map((cells, index) => {
+      const rowObject = {};
+      headerRow.forEach((field, cellIndex) => {
+        if (!field) return;
+        rowObject[field] = cells[cellIndex] ?? "";
+      });
+      return normalizeContentRecord(rowObject, index + 1);
+    })
+    .filter(Boolean);
+}
+
+function parseRecordsFromJson(payload) {
+  const source =
+    (payload && typeof payload === "object" && Array.isArray(payload.services) && payload.services) ||
+    (Array.isArray(payload) && payload) ||
+    [];
+
+  return source
+    .map((record, index) => normalizeContentRecord(record, index + 1))
+    .filter(Boolean);
+}
+
+async function fetchWithTimeout(url, init = {}) {
+  const abortController = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timeout = abortController
+    ? setTimeout(() => abortController.abort(), CMS_REQUEST_TIMEOUT_MS)
+    : null;
+
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: abortController?.signal
+    });
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
+
+async function readFallbackPayload() {
+  if (isNodeRuntime()) {
+    try {
+      const { readFile } = await import("node:fs/promises");
+      const raw = await readFile(new URL("./data/content-fallback.json", import.meta.url), "utf8");
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+
+  if (typeof fetch !== "function") return null;
+  try {
+    const response = await fetchWithTimeout(CONTENT_FALLBACK_PATH, { cache: "no-store" });
+    if (!response.ok) return null;
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
+function parseDotEnvValue(rawValue = "") {
+  const value = String(rawValue).trim();
+  if (!value) return "";
+
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    return value.slice(1, -1).trim();
+  }
+
+  return value;
+}
+
+async function readContentUrlFromDotEnv() {
+  if (!isNodeRuntime()) return "";
+  try {
+    const { readFile } = await import("node:fs/promises");
+    const rawEnv = await readFile(new URL("./.env", import.meta.url), "utf8");
+    for (const line of rawEnv.split(/\r?\n/g)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const separatorIndex = trimmed.indexOf("=");
+      if (separatorIndex <= 0) continue;
+      const key = trimmed.slice(0, separatorIndex).trim();
+      if (key !== "GOOGLE_SHEETS_CONTENT_URL") continue;
+      return parseDotEnvValue(trimmed.slice(separatorIndex + 1));
+    }
+  } catch {
+    return "";
+  }
+  return "";
+}
+
+async function getConfiguredContentUrl() {
+  if (isNodeRuntime()) {
+    const fromEnv = normalizeText(process.env.GOOGLE_SHEETS_CONTENT_URL);
+    if (fromEnv) return fromEnv;
+
+    const fromDotEnv = normalizeText(await readContentUrlFromDotEnv());
+    if (fromDotEnv) return fromDotEnv;
+  }
+
+  const fromGlobal = normalizeText(globalThis?.GOOGLE_SHEETS_CONTENT_URL);
+  if (fromGlobal) return fromGlobal;
+
+  if (typeof document !== "undefined") {
+    const meta = document.querySelector('meta[name="google-sheets-content-url"]');
+    const fromMeta = normalizeText(meta?.content);
+    if (fromMeta) return fromMeta;
+  }
+
+  return "";
+}
+
+async function loadRemoteRecords(contentUrl) {
+  if (!contentUrl || typeof fetch !== "function") return [];
+
+  try {
+    const response = await fetchWithTimeout(contentUrl, { cache: "no-store" });
+    if (!response.ok) return [];
+
+    const contentType = String(response.headers.get("content-type") || "").toLowerCase();
+    const raw = await response.text();
+    const trimmed = raw.trim();
+    if (!trimmed) return [];
+
+    if (contentType.includes("json") || trimmed.startsWith("{") || trimmed.startsWith("[")) {
+      return parseRecordsFromJson(JSON.parse(trimmed));
+    }
+
+    return parseRecordsFromCsv(raw);
+  } catch {
+    return [];
+  }
+}
+
+function mergeContentRecords(fallbackRecords, remoteRecords) {
+  const mergedByPrimaryKey = new Map();
+
+  const upsert = (record) => {
+    const primaryKey = normalizeLookupKey(record.slug || record.id);
+    if (!primaryKey) return;
+    const existing = mergedByPrimaryKey.get(primaryKey);
+    mergedByPrimaryKey.set(primaryKey, mergeRecordValues(existing, record));
+  };
+
+  fallbackRecords.forEach(upsert);
+  remoteRecords.forEach(upsert);
+
+  return [...mergedByPrimaryKey.values()];
+}
+
+function buildRecordLookup(records) {
+  const lookup = new Map();
+
+  records.forEach((record) => {
+    const slugKey = normalizeLookupKey(record.slug);
+    const idKey = normalizeLookupKey(record.id);
+    if (slugKey) lookup.set(slugKey, record);
+    if (idKey) lookup.set(idKey, record);
+  });
+
+  return lookup;
+}
+
+function applyContentRecord(activity, contentRecord) {
+  if (!contentRecord) return activity;
+  if (contentRecord.is_active === false) return { ...activity, isActive: false };
+
+  const merged = { ...activity };
+
+  if (contentRecord.title) merged.title = contentRecord.title;
+  if (contentRecord.short_title) merged.shortTitle = contentRecord.short_title;
+  if (contentRecord.category) merged.category = contentRecord.category;
+  if (contentRecord.price_text) merged.price = contentRecord.price_text;
+  if (Number.isFinite(contentRecord.price_from)) merged.priceFrom = contentRecord.price_from;
+  if (contentRecord.duration_text) merged.duration = contentRecord.duration_text;
+  if (contentRecord.short_description) {
+    merged.short = contentRecord.short_description;
+    merged.shortDescription = contentRecord.short_description;
+  }
+  if (contentRecord.full_description) merged.description = contentRecord.full_description;
+  if (contentRecord.includes?.length) merged.includes = contentRecord.includes;
+  if (contentRecord.schedule_text) merged.startTimes = contentRecord.schedule_text;
+  if (contentRecord.image_key) merged.imageKey = contentRecord.image_key;
+  if (contentRecord.image_url) merged.imageUrl = contentRecord.image_url;
+  if (contentRecord.cta_text) merged.ctaLabel = contentRecord.cta_text;
+  if (contentRecord.cta_url) merged.ctaUrl = contentRecord.cta_url;
+  if (Number.isFinite(contentRecord.sort_order)) merged.sortOrder = contentRecord.sort_order;
+  if (contentRecord.updated_at) merged.updatedAt = contentRecord.updated_at;
+  merged.isActive = true;
+
+  return merged;
+}
+
+function getRefreshIntervalMs() {
+  if (!isNodeRuntime()) return 0;
+  const fromEnv = Number(process.env.GOOGLE_SHEETS_REFRESH_MS);
+  if (Number.isFinite(fromEnv) && fromEnv >= 10000) return fromEnv;
+  return DEFAULT_CMS_REFRESH_MS;
+}
+
+async function resolveContentRecords() {
+  const fallbackPayload = await readFallbackPayload();
+  const fallbackRecords = parseRecordsFromJson(fallbackPayload);
+  const contentUrl = await getConfiguredContentUrl();
+  const remoteRecords = contentUrl ? await loadRemoteRecords(contentUrl) : [];
+  return mergeContentRecords(fallbackRecords, remoteRecords);
+}
+
 const activitiesWithOverrides = activities.map((activity) => {
   const key = activity.slug || activity.id;
   const override = activityOverridesBySlug[key];
@@ -1439,5 +1886,51 @@ const activitiesWithOverrides = activities.map((activity) => {
   return { ...activity, ...override };
 });
 
-export const activitiesCatalog = activitiesWithOverrides.map(normalizeActivity);
+async function buildActivitiesCatalog() {
+  const contentRecords = await resolveContentRecords();
+  const contentRecordLookup = buildRecordLookup(contentRecords);
+
+  const activitiesWithContent = activitiesWithOverrides
+    .map((activity, baseIndex) => {
+      const activityKey = normalizeLookupKey(activity.slug || activity.id);
+      const contentRecord = activityKey ? contentRecordLookup.get(activityKey) : null;
+      const mergedActivity = applyContentRecord(activity, contentRecord);
+      return { ...mergedActivity, __baseIndex: baseIndex };
+    })
+    .filter((activity) => activity.isActive !== false)
+    .sort((left, right) => {
+      const leftSort = Number.isFinite(left.sortOrder) ? left.sortOrder : Number.MAX_SAFE_INTEGER;
+      const rightSort = Number.isFinite(right.sortOrder) ? right.sortOrder : Number.MAX_SAFE_INTEGER;
+      if (leftSort !== rightSort) return leftSort - rightSort;
+      return left.__baseIndex - right.__baseIndex;
+    })
+    .map(({ __baseIndex, ...activity }) => activity);
+
+  return activitiesWithContent.map(normalizeActivity);
+}
+
+export const activitiesCatalog = [];
+
+export async function refreshActivitiesCatalog() {
+  try {
+    const nextActivities = await buildActivitiesCatalog();
+    activitiesCatalog.splice(0, activitiesCatalog.length, ...nextActivities);
+  } catch {
+    if (!activitiesCatalog.length) {
+      const baseline = activitiesWithOverrides.map(normalizeActivity);
+      activitiesCatalog.splice(0, activitiesCatalog.length, ...baseline);
+    }
+  }
+  return activitiesCatalog;
+}
+
+await refreshActivitiesCatalog();
+
+const refreshIntervalMs = getRefreshIntervalMs();
+if (refreshIntervalMs > 0 && typeof setInterval === "function") {
+  const timer = setInterval(() => {
+    refreshActivitiesCatalog().catch(() => {});
+  }, refreshIntervalMs);
+  if (typeof timer?.unref === "function") timer.unref();
+}
 

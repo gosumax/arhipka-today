@@ -1022,6 +1022,12 @@ h3 {
   background: linear-gradient(140deg, #e9fbff 0%, #55c8d6 44%, #207bbb 100%);
 }
 
+.sup-vulan-bg {
+  --card-image: url("./fotoref/sup-vulan-card.webp");
+  --card-position: 52% 50%;
+  background: linear-gradient(140deg, #e9fbff 0%, #55c8d6 44%, #207bbb 100%);
+}
+
 .diving-bg {
   --card-image: url("./fotoref/diving-card.webp");
   --card-position: 48% 44%;

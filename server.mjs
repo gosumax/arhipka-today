@@ -4,7 +4,14 @@ import { extname, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { brotliCompressSync, constants as zlibConstants, gzipSync } from "node:zlib";
 import { activitiesCatalog } from "./activities-catalog.js";
-import { categoryPages, getActivitySlug, renderLegalPage, renderTravelPage } from "./page-renderer.mjs";
+import {
+  categoryPages,
+  getActivitySlug,
+  getCategoryActivities,
+  renderActivityCard,
+  renderLegalPage,
+  renderTravelPage
+} from "./page-renderer.mjs";
 import { newSeoPages, renderNewSeoPage } from "./seo-new-pages.mjs";
 import { ensureQuadDirectionCard, normalizeFooterShell, normalizeLandingHeroShell } from "./hero-header-shell.mjs";
 
@@ -39,6 +46,17 @@ const sitemapPaths = [
   ...categoryPages.map((category) => `/travel/${category.slug}`),
   ...activitiesCatalog.map((activity) => `/travel/${getActivitySlug(activity)}`)
 ].filter((pathname, index, arr) => arr.indexOf(pathname) === index);
+
+const snapshotCategorySlugByPath = {
+  "/morskie-progulki": "more",
+  "/vodopady": "vodopady-dzhipping",
+  "/ekskursii": "ekskursii",
+  "/s-detmi": "s-detmi"
+};
+
+const activityBySlug = new Map(
+  activitiesCatalog.map((activity) => [getActivitySlug(activity), activity])
+);
 
 const caches = {
   weather: { expiresAt: 0, value: null },
@@ -177,6 +195,101 @@ function normalizeSnapshotHtml(html) {
   return versionedAssetsHtml.replace("</head>", `    ${socialMeta}\n  </head>`);
 }
 
+function getActivitySlugFromHref(href = "") {
+  try {
+    const pathname = new URL(href, siteUrl).pathname;
+    return decodeURIComponent(pathname).replace(/^\/travel\/?/, "").replace(/\/+$/, "");
+  } catch {
+    return String(href || "").replace(/^\/travel\/?/, "").replace(/\/+$/, "");
+  }
+}
+
+function replaceActivityCardsWithCms(html) {
+  return html.replace(
+    /<a\s+class="[^"]*\bactivity-card\b[\s\S]*?href="([^"]+)"[\s\S]*?<\/a>/gi,
+    (cardHtml, href) => {
+      const slug = getActivitySlugFromHref(href);
+      const activity = slug ? activityBySlug.get(slug) : null;
+      return activity ? renderActivityCard(activity, true) : "";
+    }
+  );
+}
+
+function replaceSnapshotCategoryGrid(pathname, html) {
+  const categorySlug = snapshotCategorySlugByPath[pathname];
+  if (!categorySlug) return html;
+
+  const category = categoryPages.find((item) => item.slug === categorySlug);
+  if (!category) return html;
+
+  const cards = getCategoryActivities(category)
+    .map((activity) => renderActivityCard(activity, true))
+    .join("");
+
+  return html.replace(
+    /(<div class="[^"]*\bpopular-grid\b[^"]*\bservice-category-grid\b[^"]*">)[\s\S]*?(<\/div>\s*<\/section>)/i,
+    `$1${cards}$2`
+  );
+}
+
+function injectKidsTopicSections(pathname, html) {
+  if (pathname !== "/s-detmi") return html;
+  if (
+    html.includes('id="plyazhi-dlya-detey"')
+    || html.includes('id="kafe-i-pitanie"')
+    || html.includes('id="razvlecheniya-i-parki"')
+  ) {
+    return html;
+  }
+
+  const practicalSections = [
+    '<section class="service-layout seo-content-layout">',
+    '<div class="service-main">',
+    '<section class="service-panel" id="plyazhi-dlya-detey" aria-labelledby="plyazhi-dlya-detey-title">',
+    '<h2 id="plyazhi-dlya-detey-title">Пляжи для детей</h2>',
+    '<p>Если семья ищет более удобный пляж для детей, можно рассмотреть песчаный участок ближе к горе Ёжик, в стороне Ёжика. За счёт песка и более понятного захода в воду детям там может быть комфортнее.</p>',
+    '<ul class="service-list">',
+    '<li>Перед выходом смотрите на погоду, волну, загруженность пляжа и возраст ребёнка.</li>',
+    '<li>Берите воду, полотенце, сменную одежду и защиту от солнца.</li>',
+    '<li>Не оставляйте детей без присмотра у воды.</li>',
+    '<li>Если после пляжа планируется морская прогулка, приходите заранее и не перегревайтесь перед поездкой.</li>',
+    '</ul>',
+    '</section>',
+    '<section class="service-panel" id="kafe-i-pitanie" aria-labelledby="kafe-i-pitanie-title">',
+    '<h2 id="kafe-i-pitanie-title">Кафе и питание с детьми</h2>',
+    '<p>Пока на сайте мы не рекламируем конкретное кафе, если нет подтверждённого партнёра и проверенного места. Самый практичный ориентир — спросить у местных, где они сами едят.</p>',
+    '<ul class="service-list">',
+    '<li>Выбирайте кафе по понятному меню, свежей еде, возможности быстро накормить ребёнка, тени или прохладе, чистоте и близости к маршруту.</li>',
+    '<li>Для маленьких детей лучше иметь с собой воду и лёгкий перекус.</li>',
+    '<li>Перед морской прогулкой лучше не брать тяжёлую еду.</li>',
+    '<li>Перед длительной экскурсией заранее уточняйте, входит ли питание.</li>',
+    '<li>Если ребёнок привередлив в еде, берите привычный перекус с собой.</li>',
+    '</ul>',
+    '</section>',
+    '<section class="service-panel" id="razvlecheniya-i-parki" aria-labelledby="razvlecheniya-i-parki-title">',
+    '<h2 id="razvlecheniya-i-parki-title">Развлечения и парки</h2>',
+    '<p>Если вы выбираете развлечения с детьми, ориентируйтесь на понятный и короткий формат рядом с центром или набережной. На странице нет неподтверждённых названий парков и точек: лучше уточнять актуальные варианты по месту в день прогулки.</p>',
+    '<ul class="service-list">',
+    '<li>Выбирайте активности по возрасту ребёнка и времени дня: в жару лучше смещать на утро и вечер.</li>',
+    '<li>Чередуйте активные и спокойные блоки, чтобы ребёнок не переутомился.</li>',
+    '<li>Проверяйте тень, воду и возможность коротких пауз рядом.</li>',
+    '<li>Если нужна более спокойная альтернатива, выбирайте набережную и короткий пеший маршрут.</li>',
+    '</ul>',
+    '</section>',
+    '</div>',
+    '</section>'
+  ].join("");
+
+  return html.replace(
+    /<section class="popular-section service-category-section seo-service-catalog"/i,
+    `${practicalSections}<section class="popular-section service-category-section seo-service-catalog"`
+  );
+}
+
+function applyCmsCatalogToSnapshot(pathname, html) {
+  return injectKidsTopicSections(pathname, replaceActivityCardsWithCms(replaceSnapshotCategoryGrid(pathname, html)));
+}
+
 function shouldRedirectToTrailingSlash(pathname) {
   if (!pathname || pathname === "/" || pathname.endsWith("/")) return false;
   if (pathname.startsWith("/api/") || /\.[a-z0-9]+$/i.test(pathname)) return false;
@@ -199,6 +312,9 @@ function getCacheControlForFile(filePath, extension) {
     return "no-cache";
   }
   if (normalized.endsWith("/hero-media.js")) {
+    return "no-cache";
+  }
+  if (normalized.endsWith("/data/content-fallback.json")) {
     return "no-cache";
   }
   return getCacheControlByExt(extension);
@@ -484,7 +600,10 @@ createServer(async (req, res) => {
 
     if (snapshotSeoPaths.has(normalizedPath)) {
       const snapshotFile = join(root, "seo-snapshots", normalizedPath.slice(1), "index.html");
-      const snapshotHtml = normalizeSnapshotHtml(await readFile(snapshotFile, "utf8"));
+      const snapshotHtml = applyCmsCatalogToSnapshot(
+        normalizedPath,
+        normalizeSnapshotHtml(await readFile(snapshotFile, "utf8"))
+      );
       const html = normalizeFooterShell(
         ensureQuadDirectionCard(
           normalizeLandingHeroShell(snapshotHtml, { fallbackPrimaryHref: "#popular" })

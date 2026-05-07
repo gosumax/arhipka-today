@@ -129,6 +129,7 @@ export const newSeoPages = [
         ]
       },
       {
+        id: "realnye-tochki-i-marshruty-na-karte",
         title: "Реальные точки и маршруты на карте",
         cards: [
           {
@@ -354,6 +355,7 @@ export const newSeoPages = [
         ]
       },
       {
+        id: "realnye-tochki-dlya-vechernego-marshruta",
         title: "Реальные точки для вечернего маршрута",
         cards: [
           {
@@ -606,7 +608,7 @@ function renderLinks(links) {
 
 function renderBlocks(blocks) {
   return blocks.map((block) => [
-    '<section class="service-panel">',
+    `<section class="service-panel"${block.id ? ` id="${escapeHtml(block.id)}"` : ""}>`,
     `<h2>${escapeHtml(block.title)}</h2>`,
     Array.isArray(block.paragraphs) ? block.paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join("") : "",
     Array.isArray(block.items) ? `<ul class="service-list">${block.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : "",

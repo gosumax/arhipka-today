@@ -54,10 +54,10 @@ const sectionMeta = {
     anchorId: "by-situation"
   },
   "map-points": {
-    anchorId: "map-points",
+    anchorId: "realnye-tochki-i-marshruty",
     action: {
       label: "Смотреть все точки на карте",
-      href: "/chto-posmotret-v-arhipo-osipovke/"
+      href: "/chto-posmotret-v-arhipo-osipovke/#realnye-tochki-i-marshruty-na-karte"
     }
   },
   "sea-trips": {
@@ -154,6 +154,10 @@ function inferImageClass(card, sectionId, activity) {
   const manualImageClass = typeof card?.imageClass === "string" ? card.imageClass.trim() : "";
   if (manualImageClass) return manualImageClass;
 
+  if (activity?.id === "sup-vulan" || activity?.slug === "sup-vulan") {
+    return "sup-vulan-bg";
+  }
+
   if (activity?.imageKey && imageClassByKey[activity.imageKey]) {
     return imageClassByKey[activity.imageKey];
   }
@@ -230,10 +234,11 @@ function renderCardPhoto(card, sectionId, className = "home-card-photo") {
   const activity = getActivityForCard(card);
   const imageClass = inferImageClass(card, sectionId, activity);
   const entityLabel = inferCardEntityLabel(card, sectionId, activity);
+  const lazyClass = activity?.id === "sup-vulan" || activity?.slug === "sup-vulan" ? "" : " card-photo-lazy";
   if (entityLabel) {
-    return `<div class="${className} image-placeholder card-photo ${imageClass} card-photo-lazy" role="img" aria-label="${escapeHtml(entityLabel)}" data-entity="${escapeHtml(normalizeEntityAttribute(entityLabel))}"></div>`;
+    return `<div class="${className} image-placeholder card-photo ${imageClass}${lazyClass}" role="img" aria-label="${escapeHtml(entityLabel)}" data-entity="${escapeHtml(normalizeEntityAttribute(entityLabel))}"></div>`;
   }
-  return `<div class="${className} image-placeholder card-photo ${imageClass} card-photo-lazy" aria-hidden="true"></div>`;
+  return `<div class="${className} image-placeholder card-photo ${imageClass}${lazyClass}" aria-hidden="true"></div>`;
 }
 
 function renderHomeIcon(iconKey) {
