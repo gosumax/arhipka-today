@@ -616,6 +616,7 @@ await Promise.all([
   copyFile(path.join(projectRoot, "activities-catalog.js"), path.join(dist, "activities-catalog.js")),
   copyFile(path.join(projectRoot, "catalog-renderer.js"), path.join(dist, "catalog-renderer.js")),
   writeRuntimeHomeBlocksModule(),
+  copyFile(path.join(projectRoot, "weather-widget.js"), path.join(dist, "weather-widget.js")),
   copyFile(path.join(projectRoot, "hero-media.js"), path.join(dist, "hero-media.js")),
   copyFile(path.join(projectRoot, "legal.js"), path.join(dist, "legal.js"))
 ]);

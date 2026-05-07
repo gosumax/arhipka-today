@@ -14,7 +14,7 @@ const siteUrl = (process.env.SITE_URL || process.env.BASE_URL || "https://arhipk
 const siteOrigin = new URL(siteUrl).origin;
 
 const locationName = "Архипо-Осиповка";
-const coordinates = { latitude: 44.37, longitude: 38.53 };
+const coordinates = { latitude: 44.3719, longitude: 38.5297 };
 const weatherCacheTtl = 20 * 60 * 1000;
 const marineCacheTtl = 2 * 60 * 60 * 1000;
 const requestTimeoutMs = 8000;
@@ -258,20 +258,30 @@ function formatSunset(value) {
 
 function getSeaText(waveHeight) {
   if (!Number.isFinite(waveHeight)) return "Данные о море временно недоступны";
-  if (waveHeight < 0.4) return "Море спокойное";
-  if (waveHeight < 0.8) return "Небольшая волна";
-  if (waveHeight < 1.3) return "Море неспокойное";
+  if (waveHeight < 0.25) return "Спокойно";
+  if (waveHeight < 0.6) return "Небольшая волна";
+  if (waveHeight < 1.0) return "Есть волна";
   return "Сильное волнение";
 }
 
-function getRecommendation({ weatherText, windSpeed, waveHeight }) {
-  const calmSea = !Number.isFinite(waveHeight) || waveHeight < 0.8;
-  const calmWind = !Number.isFinite(windSpeed) || windSpeed <= 6;
-  const sunny = ["Ясно", "Преимущественно ясно", "Переменная облачность"].includes(weatherText);
+function getRecommendation({ windSpeed, waveHeight }) {
+  const hasWind = Number.isFinite(windSpeed);
+  const hasWave = Number.isFinite(waveHeight);
+  const strongWind = hasWind && windSpeed >= 9;
+  const highWave = hasWave && waveHeight >= 1;
+  const mediumWind = hasWind && windSpeed >= 6;
+  const noticeableWave = hasWave && waveHeight >= 0.6;
 
-  if (calmSea && calmWind && sunny) return "Хорошие условия: можно рассматривать выход в море и прогулки у воды.";
-  if (!calmSea || !calmWind) return "Лучше выбрать наземный формат: водопады, экскурсии или прогулки.";
-  return "Погода в целом подходит, но перед выходом лучше уточнить детали.";
+  if (strongWind || highWave) {
+    return "Для моря условия могут быть некомфортными, рассмотрите водопады или прогулку по берегу.";
+  }
+  if (mediumWind || noticeableWave) {
+    return "Перед выходом лучше уточнить условия у капитана.";
+  }
+  if (hasWind && hasWave && windSpeed < 6 && waveHeight < 0.6) {
+    return "Море спокойное, можно смотреть морские прогулки.";
+  }
+  return "Перед выходом лучше уточнить условия у капитана.";
 }
 
 async function fetchJson(url) {
@@ -293,10 +303,11 @@ async function getWeatherData(forceRefresh = false) {
   const params = new URLSearchParams({
     latitude: String(coordinates.latitude),
     longitude: String(coordinates.longitude),
-    current: "temperature_2m,weather_code,wind_speed_10m,wind_gusts_10m",
+    current: "temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m",
     daily: "sunset",
     timezone: "Europe/Moscow",
-    forecast_days: "1"
+    forecast_days: "1",
+    wind_speed_unit: "ms"
   });
   const json = await fetchJson(`https://api.open-meteo.com/v1/forecast?${params}`);
   const current = json.current || {};
@@ -304,31 +315,13 @@ async function getWeatherData(forceRefresh = false) {
     airTemperature: roundOrNull(current.temperature_2m),
     weatherText: weatherCodes.get(current.weather_code) || "Данные о погоде недоступны",
     windSpeed: roundOrNull(current.wind_speed_10m),
+    windDirection: roundOrNull(current.wind_direction_10m),
     windGust: roundOrNull(current.wind_gusts_10m),
     sunsetTime: formatSunset(json.daily?.sunset?.[0])
   };
 
   caches.weather = { value, expiresAt: now + weatherCacheTtl };
   return value;
-}
-
-function nearestHourlyValue(hourly, key) {
-  const times = hourly?.time;
-  const values = hourly?.[key];
-  if (!Array.isArray(times) || !Array.isArray(values) || !times.length) return null;
-
-  const now = Date.now();
-  let bestIndex = 0;
-  let bestDiff = Infinity;
-  for (let i = 0; i < times.length; i += 1) {
-    const diff = Math.abs(new Date(times[i]).getTime() - now);
-    if (diff < bestDiff) {
-      bestDiff = diff;
-      bestIndex = i;
-    }
-  }
-
-  return values[bestIndex];
 }
 
 async function getMarineData(forceRefresh = false) {
@@ -338,13 +331,13 @@ async function getMarineData(forceRefresh = false) {
   const params = new URLSearchParams({
     latitude: String(coordinates.latitude),
     longitude: String(coordinates.longitude),
-    hourly: "sea_surface_temperature,wave_height",
+    current: "sea_surface_temperature,wave_height",
     timezone: "Europe/Moscow",
     forecast_days: "1"
   });
   const json = await fetchJson(`https://marine-api.open-meteo.com/v1/marine?${params}`);
-  const seaTemperature = roundOrNull(nearestHourlyValue(json.hourly, "sea_surface_temperature"));
-  const waveHeightRaw = nearestHourlyValue(json.hourly, "wave_height");
+  const seaTemperature = roundOrNull(json.current?.sea_surface_temperature);
+  const waveHeightRaw = json.current?.wave_height;
   const waveHeight = Number.isFinite(waveHeightRaw) ? Math.round(waveHeightRaw * 10) / 10 : null;
   const value = { seaTemperature, waveHeight, seaText: getSeaText(waveHeight) };
 
@@ -356,34 +349,51 @@ async function getPublicWeather(url) {
   const forceError = url.searchParams.get("forceError") === "1";
   try {
     if (forceError) throw new Error("Forced weather fallback");
-    const [weather, marine] = await Promise.all([
+    const [weatherResult, marineResult] = await Promise.allSettled([
       getWeatherData(url.searchParams.get("refresh") === "1"),
       getMarineData(url.searchParams.get("refresh") === "1")
     ]);
+    if (weatherResult.status === "rejected" && marineResult.status === "rejected") {
+      throw new Error("Weather sources unavailable");
+    }
+    const weather = weatherResult.status === "fulfilled" ? weatherResult.value : {};
+    const marine = marineResult.status === "fulfilled" ? marineResult.value : {};
     const payload = {
       location: locationName,
+      coordinates,
       updatedAt: new Date().toISOString(),
-      airTemperature: weather.airTemperature,
-      weatherText: weather.weatherText,
-      windSpeed: weather.windSpeed,
-      windGust: weather.windGust,
-      sunsetTime: weather.sunsetTime,
-      seaTemperature: marine.seaTemperature,
-      waveHeight: marine.waveHeight,
-      seaText: marine.seaText,
-      recommendation: getRecommendation({ weatherText: weather.weatherText, windSpeed: weather.windSpeed, waveHeight: marine.waveHeight }),
-      isFallback: false
+      airTemperature: weather.airTemperature ?? null,
+      weatherText: weather.weatherText || "нет данных сейчас",
+      windSpeed: weather.windSpeed ?? null,
+      windDirection: weather.windDirection ?? null,
+      windGust: weather.windGust ?? null,
+      sunsetTime: weather.sunsetTime || null,
+      seaTemperature: marine.seaTemperature ?? null,
+      waveHeight: marine.waveHeight ?? null,
+      seaText: marine.seaText || "нет данных сейчас",
+      recommendation: getRecommendation({ windSpeed: weather.windSpeed, waveHeight: marine.waveHeight }),
+      isFallback: false,
+      isPartial: weatherResult.status === "rejected" || marineResult.status === "rejected"
     };
     caches.combined = payload;
     return payload;
   } catch {
-    return caches.combined || {
+    if (!forceError && caches.combined) return caches.combined;
+    return {
       location: locationName,
+      coordinates,
       updatedAt: new Date().toISOString(),
+      airTemperature: null,
       weatherText: "Сейчас нет данных о погоде",
+      windSpeed: null,
+      windDirection: null,
+      windGust: null,
+      seaTemperature: null,
+      waveHeight: null,
       seaText: "Данные о море пока недоступны",
-      recommendation: "Если море волнуется, лучше выбрать наземный маршрут.",
-      isFallback: true
+      recommendation: "Сейчас не удалось обновить погоду. Уточните условия перед выходом в море.",
+      isFallback: true,
+      isPartial: true
     };
   }
 }
