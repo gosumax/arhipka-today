@@ -1,4 +1,32 @@
 (() => {
+  const mobileMenus = [...document.querySelectorAll(".mobile-menu")].filter(
+    (node) => node instanceof HTMLDetailsElement
+  );
+
+  if (mobileMenus.length) {
+    const closeOtherMenus = (currentMenu) => {
+      mobileMenus.forEach((menu) => {
+        if (menu !== currentMenu) menu.open = false;
+      });
+    };
+
+    mobileMenus.forEach((menu) => {
+      menu.addEventListener("toggle", () => {
+        if (menu.open) closeOtherMenus(menu);
+      });
+    });
+
+    document.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      mobileMenus.forEach((menu) => {
+        if (menu.open && !menu.contains(target)) {
+          menu.open = false;
+        }
+      });
+    });
+  }
+
   const videos = document.querySelectorAll(".hero-video[data-src]");
   if (!videos.length) return;
 

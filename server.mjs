@@ -65,6 +65,7 @@ const contentTypes = {
 const compressionMinBytes = 1024;
 const brotliOptions = { params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 4 } };
 const gzipOptions = { level: 6 };
+const assetVersion = "20260507-mobile-menu-close";
 
 const weatherCodes = new Map([
   [0, "Ясно"],
@@ -126,17 +127,21 @@ function normalizeSnapshotHtml(html) {
   };
 
   const normalizedLinksHtml = html.replace(/href="([^"]+)"/g, (_match, href) => `href="${normalizeInternalHref(href)}"`);
-  const matchTitle = normalizedLinksHtml.match(/<title>([\s\S]*?)<\/title>/i);
-  const matchDescription = normalizedLinksHtml.match(/<meta\s+name="description"\s+content="([^"]*)"\s*\/?>/i);
-  const matchCanonical = normalizedLinksHtml.match(/<link\s+rel="canonical"\s+href="([^"]+)"\s*\/?>/i);
-  const matchHeroImage =
-    normalizedLinksHtml.match(/<meta\s+property="og:image"\s+content="([^"]+)"\s*\/?>/i) ||
-    normalizedLinksHtml.match(/<link\s+rel="preload"\s+as="image"\s+href="([^"]+)"\s*\/?>/i) ||
-    normalizedLinksHtml.match(/<video[^>]*\sposter="([^"]+)"/i) ||
-    normalizedLinksHtml.match(/<source[^>]*\ssrcset="([^"]+)"/i) ||
-    normalizedLinksHtml.match(/<img[^>]*\ssrc="(?!data:)([^"]+)"/i);
+  const versionedAssetsHtml = normalizedLinksHtml
+    .replace(/href="\/styles\.css(?:\?[^"]*)?"/gi, `href="/styles.css?v=${assetVersion}"`)
+    .replace(/src="\/hero-media\.js(?:\?[^"]*)?"/gi, `src="/hero-media.js?v=${assetVersion}"`);
 
-  if (!matchTitle || !matchDescription || !matchCanonical) return normalizedLinksHtml;
+  const matchTitle = versionedAssetsHtml.match(/<title>([\s\S]*?)<\/title>/i);
+  const matchDescription = versionedAssetsHtml.match(/<meta\s+name="description"\s+content="([^"]*)"\s*\/?>/i);
+  const matchCanonical = versionedAssetsHtml.match(/<link\s+rel="canonical"\s+href="([^"]+)"\s*\/?>/i);
+  const matchHeroImage =
+    versionedAssetsHtml.match(/<meta\s+property="og:image"\s+content="([^"]+)"\s*\/?>/i) ||
+    versionedAssetsHtml.match(/<link\s+rel="preload"\s+as="image"\s+href="([^"]+)"\s*\/?>/i) ||
+    versionedAssetsHtml.match(/<video[^>]*\sposter="([^"]+)"/i) ||
+    versionedAssetsHtml.match(/<source[^>]*\ssrcset="([^"]+)"/i) ||
+    versionedAssetsHtml.match(/<img[^>]*\ssrc="(?!data:)([^"]+)"/i);
+
+  if (!matchTitle || !matchDescription || !matchCanonical) return versionedAssetsHtml;
 
   const title = matchTitle[1].trim();
   const description = matchDescription[1].trim();
@@ -165,11 +170,11 @@ function normalizeSnapshotHtml(html) {
     `<meta name="twitter:image" content="${imageUrl}" />`
   ].join("\n    ");
 
-  if (/<meta\s+property="og:title"/i.test(normalizedLinksHtml) || /<meta\s+name="twitter:card"/i.test(normalizedLinksHtml)) {
-    return normalizedLinksHtml;
+  if (/<meta\s+property="og:title"/i.test(versionedAssetsHtml) || /<meta\s+name="twitter:card"/i.test(versionedAssetsHtml)) {
+    return versionedAssetsHtml;
   }
 
-  return normalizedLinksHtml.replace("</head>", `    ${socialMeta}\n  </head>`);
+  return versionedAssetsHtml.replace("</head>", `    ${socialMeta}\n  </head>`);
 }
 
 function shouldRedirectToTrailingSlash(pathname) {
@@ -188,6 +193,12 @@ function getCacheControlByExt(extension) {
 function getCacheControlForFile(filePath, extension) {
   const normalized = filePath.replace(/\\/g, "/").toLowerCase();
   if (normalized.endsWith("/catalog-renderer.js") || normalized.endsWith("/activities-catalog.js")) {
+    return "no-cache";
+  }
+  if (normalized.endsWith("/styles.css")) {
+    return "no-cache";
+  }
+  if (normalized.endsWith("/hero-media.js")) {
     return "no-cache";
   }
   return getCacheControlByExt(extension);

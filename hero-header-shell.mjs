@@ -2,7 +2,7 @@ const quadHref = "/travel/kvadrotsikly-ekstrim/";
 
 export const contactPhone = "+7 979 033-97-39";
 export const contactPhoneHref = "+79790339739";
-export const maxLink = "https://max.ru/u/f9LHodD0cOKLzWwiUsSgrCMCJuT_ZWsnGPwU8AH5qBO8vgOCIXlfd98nK";
+export const maxLink = "https://max.ru/join/qCLJi5XmkxHF9uQlIyP_HjrmzW5LM7kusXniVJ9dcSc";
 
 export const headerNavItems = [
   { href: "/morskie-progulki/", label: "Морские прогулки" },

@@ -175,7 +175,7 @@ function renderPage({ title, description, canonicalPath, body, jsonLd, bodyClass
     <meta name="twitter:title" content="${escapeHtml(title)}" />
     <meta name="twitter:description" content="${escapeHtml(description)}" />
     <meta name="twitter:image" content="${socialImageUrl}" />
-    <link rel="stylesheet" href="/styles.css?v=20260506-service-hero-v2" />
+    <link rel="stylesheet" href="/styles.css?v=20260507-mobile-menu-close" />
     <link rel="preload" as="image" href="/fotoref/more-hero-mobile.jpg" media="(max-width: 760px)" fetchpriority="high" />
     <link rel="preload" as="image" href="/fotoref/more-hero.jpg" media="(min-width: 761px)" fetchpriority="high" />
     <script type="application/ld+json">${safeJsonLdStringify(jsonLd)}</script>
@@ -186,7 +186,7 @@ function renderPage({ title, description, canonicalPath, body, jsonLd, bodyClass
       ${body}
       ${renderUnifiedFooter({ homeHref: "/travel/" })}
     </div>
-    <script src="/hero-media.js" defer></script>
+    <script src="/hero-media.js?v=20260507-mobile-menu-close" defer></script>
     <script src="/legal.js" defer></script>
   </body>
 </html>`;

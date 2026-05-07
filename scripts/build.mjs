@@ -573,7 +573,16 @@ async function writeRuntimeHomeBlocksModule() {
     `export const HOME_BLOCKS = ${JSON.stringify(HOME_BLOCKS, null, 2)};`,
     ""
   ].join("\n");
-  await writeFile(path.join(dist, "home-blocks.mjs"), runtimeModule, "utf8");
+  await writeFile(path.join(dist, "home-blocks.js"), runtimeModule, "utf8");
+}
+
+async function writeRuntimeCatalogRenderer() {
+  const renderer = await readFile(path.join(projectRoot, "catalog-renderer.js"), "utf8");
+  await writeFile(
+    path.join(dist, "catalog-renderer.js"),
+    renderer.replace("./home-blocks.mjs?v=20260506-home-icons-clean", "./home-blocks.js?v=20260507-static-mime"),
+    "utf8"
+  );
 }
 
 async function collectTextFiles(dir) {
@@ -614,7 +623,7 @@ await Promise.all([
   copyFile(path.join(projectRoot, "_headers"), path.join(dist, "_headers")),
   copyFile(path.join(projectRoot, "llms.txt"), path.join(dist, "llms.txt")),
   copyFile(path.join(projectRoot, "activities-catalog.js"), path.join(dist, "activities-catalog.js")),
-  copyFile(path.join(projectRoot, "catalog-renderer.js"), path.join(dist, "catalog-renderer.js")),
+  writeRuntimeCatalogRenderer(),
   writeRuntimeHomeBlocksModule(),
   copyFile(path.join(projectRoot, "weather-widget.js"), path.join(dist, "weather-widget.js")),
   copyFile(path.join(projectRoot, "hero-media.js"), path.join(dist, "hero-media.js")),

@@ -687,7 +687,7 @@ function renderPage(page) {
     <meta name="twitter:title" content="${escapeHtml(page.title)}" />
     <meta name="twitter:description" content="${escapeHtml(page.description)}" />
     <meta name="twitter:image" content="${socialImageUrl}" />
-<link rel="stylesheet" href="/styles.css?v=20260506-service-hero-v2" />
+ <link rel="stylesheet" href="/styles.css?v=20260507-mobile-menu-close" />
 ${pageJsonLdScripts}
   </head>
   <body>
@@ -695,7 +695,7 @@ ${pageJsonLdScripts}
       ${body}
       ${renderUnifiedFooter({ homeHref: "/travel/" })}
     </div>
-    <script src="/hero-media.js" defer></script>
+    <script src="/hero-media.js?v=20260507-mobile-menu-close" defer></script>
     <script src="/legal.js" defer></script>
   </body>
 </html>`;
