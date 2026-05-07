@@ -1304,6 +1304,12 @@ h3 {
   font-weight: 900;
 }
 
+.weather.seo-weather-panel .metric strong {
+  font-size: clamp(18px, 1.5vw, 22px);
+  line-height: 1.15;
+  font-weight: 800;
+}
+
 .metric span,
 .metric small {
   overflow-wrap: normal;
