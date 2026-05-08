@@ -11,7 +11,7 @@ export const headerNavItems = [
   { href: quadHref, label: "Квадро и эндуро" },
   { href: "/s-detmi/", label: "С детьми" },
   { href: "/pogoda/", label: "Погода" },
-  { href: "/kontakty/", label: "Контакты" }
+  { href: "#contacts", label: "Контакты" }
 ];
 
 const footerDescription = "Локальный гид по отдыху: море, водопады, маршруты и идеи для семейного досуга.";
@@ -33,8 +33,7 @@ const footerDocumentLinks = [
   { href: "/privacy/", label: "Политика обработки персональных данных" },
   { href: "/personal-data-consent/", label: "Согласие на обработку персональных данных" },
   { href: "/marketing-consent/", label: "Согласие на получение рекламных сообщений" },
-  { href: "/cookie-policy/", label: "Политика cookie" },
-  { href: "/kontakty/", label: "Контакты" }
+  { href: "/cookie-policy/", label: "Политика cookie" }
 ];
 
 const quadCard = '<a class="seo-link-card" href="/travel/kvadrotsikly-ekstrim/" aria-label="Квадро и эндуро"><span class="seo-link-title">Квадро и эндуро</span><span class="seo-link-teaser">Квадроциклы, эндуро и активные маршруты 2,5-3 часа.</span><span class="seo-link-cta" aria-hidden="true">→</span></a>';
@@ -81,7 +80,7 @@ export function renderUnifiedFooter({ homeHref = "/travel/", footerClassName = "
     `<div class="footer-brand"><a class="brand" href="${homeHref}"><span class="brand-mark" aria-hidden="true"><picture><source type="image/webp" srcset="/fotoref/logo.webp" /><img src="/fotoref/logo.webp" alt="" /></picture></span><span><strong>Архипо-Осиповка сегодня</strong></span></a><p>${footerDescription}</p></div>`,
     renderFooterColumn("Популярное", footerPopularLinks),
     renderFooterColumn("Документы", footerDocumentLinks),
-    `<div><h3>Контакты</h3><a class="text-button phone-reveal-button" href="tel:${contactPhoneHref}">${contactPhone}</a><a href="${maxLink}" target="_blank" rel="noopener noreferrer">MAX</a><p class="contact-legal">Для быстрого подбора маршрута напишите в MAX или позвоните: ответим по погоде, формату и времени отдыха.</p></div>`,
+    `<div class="footer-contact-actions"><h3>Контакты</h3><a class="button button-primary" href="tel:${contactPhoneHref}">${contactPhone}</a><a class="button button-ghost" href="${maxLink}" target="_blank" rel="noopener noreferrer">MAX</a><p class="contact-legal">Для быстрого подбора маршрута напишите в MAX или позвоните: ответим по погоде, формату и времени отдыха.</p></div>`,
     "</footer>"
   ].join("");
 }

@@ -38,7 +38,7 @@ const snapshotSeoPaths = new Set([
   "/iz-krasnodara"
 ]);
 
-const canonicalLegalRoutes = ["/privacy", "/personal-data-consent", "/marketing-consent", "/cookie-policy", "/kontakty"];
+const canonicalLegalRoutes = ["/privacy", "/personal-data-consent", "/marketing-consent", "/cookie-policy"];
 const sitemapPaths = [
   "/travel",
   ...snapshotSeoPaths,
@@ -58,6 +58,41 @@ const snapshotCategorySlugByPath = {
 const activityBySlug = new Map(
   activitiesCatalog.map((activity) => [getActivitySlug(activity), activity])
 );
+const readableLabelByPath = new Map([
+  ["/morskie-progulki", "Морские прогулки"],
+  ["/vodopady", "Водопады"],
+  ["/ekskursii", "Экскурсии"],
+  ["/s-detmi", "С детьми"],
+  ["/pogoda", "Погода и температура моря"],
+  ["/kuda-shodit", "Куда сходить"],
+  ["/kuda-shodit-vecherom-v-arhipo-osipovke", "Куда сходить вечером в Архипо-Осиповке"],
+  ["/progulka-na-zakate-arhipo-osipovka", "Прогулка на закате"],
+  ["/chto-posmotret-v-arhipo-osipovke", "Что посмотреть в Архипо-Осиповке"],
+  ["/chto-vzyat-na-morskuyu-progulku", "Что взять на морскую прогулку"],
+  ["/morskaya-progulka-s-detmi-arhipo-osipovka", "Морская прогулка с детьми"],
+  ["/ceny-na-morskie-progulki-arhipo-osipovka", "Цены на морские прогулки в Архипо-Осиповке"],
+  ["/travel/kvadrotsikly-ekstrim", "Квадро и эндуро"]
+]);
+
+function normalizeLookupPath(value = "") {
+  return String(value).trim().replace(/[?#].*$/, "").replace(/\/+$/, "");
+}
+
+function getReadableLabelForHref(href = "", fallbackText = "") {
+  const normalizedPath = normalizeLookupPath(href) || "/";
+  const travelMatch = normalizedPath.match(/^\/travel\/([^/]+)$/i);
+  if (travelMatch?.[1]) {
+    const slug = decodeURIComponent(travelMatch[1]);
+    const activity = activityBySlug.get(slug);
+    const activityTitle = activity?.shortTitle || activity?.short_title || activity?.title;
+    if (activityTitle) return String(activityTitle);
+  }
+
+  const knownLabel = readableLabelByPath.get(normalizedPath);
+  if (knownLabel) return knownLabel;
+
+  return String(fallbackText || "").trim();
+}
 
 const caches = {
   weather: { expiresAt: 0, value: null },
@@ -164,7 +199,31 @@ function normalizeSnapshotHtml(html) {
   };
 
   const normalizedLinksHtml = html.replace(/href="([^"]+)"/g, (_match, href) => `href="${normalizeInternalHref(href)}"`);
-  const versionedAssetsHtml = normalizedLinksHtml
+  const withReadableSeoTitles = normalizedLinksHtml.replace(
+    /(<a class="seo-link-card"[^>]*href="([^"]+)"[^>]*>[\s\S]*?<span class="seo-link-title">)([^<]*)(<\/span>)/gi,
+    (fullMatch, prefix, href, titleText, suffix) => {
+      const trimmed = String(titleText || "").trim();
+      if (!trimmed.startsWith("/")) return fullMatch;
+      const readable = getReadableLabelForHref(href, trimmed);
+      return `${prefix}${readable}${suffix}`;
+    }
+  );
+  const withReadableTagTitles = withReadableSeoTitles.replace(
+    /(<div class="content-tags">[\s\S]*?)(<\/div>)/i,
+    (_full, contentStart, contentEnd) => {
+      const patched = contentStart.replace(
+        /(<a[^>]*href="([^"]+)"[^>]*>)([^<]*)(<\/a>)/gi,
+        (anchorFull, anchorPrefix, href, textValue, anchorSuffix) => {
+          const trimmed = String(textValue || "").trim();
+          if (!trimmed.startsWith("/")) return anchorFull;
+          const readable = getReadableLabelForHref(href, trimmed);
+          return `${anchorPrefix}${readable}${anchorSuffix}`;
+        }
+      );
+      return `${patched}${contentEnd}`;
+    }
+  );
+  const versionedAssetsHtml = withReadableTagTitles
     .replace(/href="\/styles\.css(?:\?[^"]*)?"/gi, `href="/styles.css?v=${assetVersion}"`)
     .replace(/src="\/hero-media\.js(?:\?[^"]*)?"/gi, `src="/hero-media.js?v=${assetVersion}"`);
 
@@ -538,6 +597,12 @@ createServer(async (req, res) => {
     if (shouldRedirectToTrailingSlash(url.pathname)) {
       const target = `${url.pathname}/${url.search || ""}`;
       res.writeHead(301, { Location: target });
+      res.end();
+      return;
+    }
+
+    if (normalizedPath === "/kontakty" || normalizedPath === "/contacts") {
+      res.writeHead(301, { Location: "/travel/#contacts" });
       res.end();
       return;
     }

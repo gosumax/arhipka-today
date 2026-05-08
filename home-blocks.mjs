@@ -745,10 +745,6 @@ export const HOME_BLOCKS = {
   "popular-directions": {
     id: "popular-directions",
     title: "Популярные направления",
-    action: {
-      label: "Смотреть все направления",
-      href: "/travel/"
-    },
     cards: popularDirectionsCards
   },
   "by-situation": {

@@ -44,11 +44,7 @@ const sectionMeta = {
     anchorId: "quick-choice"
   },
   "popular-directions": {
-    anchorId: "popular",
-    action: {
-      label: "Смотреть все направления",
-      href: "/travel/"
-    }
+    anchorId: "popular"
   },
   "by-situation": {
     anchorId: "by-situation"

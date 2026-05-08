@@ -450,7 +450,7 @@ const legalDocuments = {
       <ul><li>Ответ на обращение пользователя.</li><li>Подбор подходящего формата отдыха.</li><li>Выполнение требований законодательства РФ.</li></ul>
       <h2>Контакты оператора</h2>
       <p>Контактный телефон: <a href="tel:${contactPhoneHref}">${contactPhone}</a></p>
-      <p>MAX: <a href="${maxLink}" target="_blank" rel="noopener noreferrer">${maxLink}</a></p>
+      <p>MAX: <a class="button button-ghost" href="${maxLink}" target="_blank" rel="noopener noreferrer">Написать в MAX</a></p>
     `
   },
   "/personal-data-consent": {
@@ -487,11 +487,23 @@ const legalDocuments = {
     title: "Контакты",
     description: "Контакты сайта и оператора персональных данных.",
     content: `
-      <h1>Контакты</h1>
-      <p>По вопросам прогулок и экскурсий:</p>
-      <p><a class="button button-primary" href="tel:${contactPhoneHref}">${contactPhone}</a></p>
-      <p><a class="button button-ghost" href="tel:${contactPhoneHref}">Позвонить</a></p>
-      <p>Сайт: ${siteDomain}</p>
+      <div class="legal-contact-card">
+        <div class="legal-contact-brand">
+          <div>
+            <h1>Контакты</h1>
+            <p>Архипо-Осиповка сегодня</p>
+            <p>По вопросам прогулок и экскурсий напишите в MAX или позвоните.</p>
+          </div>
+        </div>
+        <div class="legal-contact-info">
+          <h2>Связаться</h2>
+          <a class="text-button phone-reveal-button" href="tel:${contactPhoneHref}">${contactPhone}</a>
+          <div class="legal-contact-actions">
+            <a class="button button-primary" href="tel:${contactPhoneHref}">Позвонить</a>
+            <a class="button button-ghost" href="${maxLink}" target="_blank" rel="noopener noreferrer">MAX</a>
+          </div>
+        </div>
+      </div>
     `
   }
 };
@@ -503,6 +515,7 @@ export function renderLegalPage(pathname) {
   const normalizedPath = pathname.replace(/\/+$/, "") || "/";
   const doc = legalDocuments[normalizedPath];
   if (!doc) return null;
+  const isKontaktyRoute = normalizedPath === "/kontakty" || normalizedPath === "/contacts";
 
   const canonicalPathByAlias = {
     "/contacts": "/kontakty",
@@ -513,7 +526,7 @@ export function renderLegalPage(pathname) {
     title: doc.title,
     description: doc.description,
     canonicalPath: `${canonicalBaseUrl}${withTrailingSlash(canonicalPathByAlias[normalizedPath] || normalizedPath)}`,
-    body: `<main class="legal-page"><article class="legal-document section-card">${doc.content}</article></main>`,
+    body: `<main class="legal-page${isKontaktyRoute ? " legal-page-kontakty" : ""}"><article class="legal-document section-card${isKontaktyRoute ? " legal-document-kontakty" : ""}">${doc.content}</article></main>`,
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "WebPage",

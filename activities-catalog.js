@@ -985,14 +985,14 @@ const activities = [
   {
     id: "diving-ship",
     slug: "diving-ship",
-    title: "Дайвинг с выходом на катере",
+    title: "Дайвинг в затонувшему военному кораблю",
     category: "Дайвинг",
     categoryIds: ["diving", "sea"],
     duration: "Около 3 часов",
     startTimes: "По согласованию",
     location: "Выход в море",
     price: "Цена по запросу",
-    short: "Погружение на удаленных точках с выходом на катере.",
+    short: "Погружение к затонувшему военному кораблю с выходом в море и сопровождением инструктора.",
     format: "Групповой",
     imageKey: "divingShip",
     popular: false,
@@ -1381,8 +1381,8 @@ const activityOverridesBySlug = {
     price: "От 8000 ₽",
     duration: "Около 2,5 часов",
     startTimes: "По набору группы",
-    short: "Погружение с выходом к морской точке: формат для тех, кто хочет увидеть подводные объекты и попробовать дайвинг с инструктором.",
-    description: "Формат включает выход в море и погружение с инструктором на морской точке. Обычно старт формируется по набору группы; на отдельных рейсах возможны окна 9:00, 12:00 и 15:00. Погружение и маршрут зависят от погоды, видимости и решения инструктора или организатора.",
+    short: "Погружение к затонувшему военному кораблю: формат для тех, кто хочет увидеть подводный объект и попробовать дайвинг с инструктором.",
+    description: "Формат включает выход в море и погружение с инструктором к затонувшему военному кораблю. Обычно старт формируется по набору группы; на отдельных рейсах возможны окна 9:00, 12:00 и 15:00. Погружение и маршрут зависят от погоды, видимости и решения инструктора или организатора.",
     includes: [
       "выход к морской точке",
       "инструктаж перед погружением",
@@ -1886,6 +1886,16 @@ const activitiesWithOverrides = activities.map((activity) => {
   return { ...activity, ...override };
 });
 
+const finalActivityOverridesBySlug = {
+  "diving-ship": {
+    title: "Дайвинг в затонувшему военному кораблю",
+    shortTitle: "Дайвинг в затонувшему военному кораблю",
+    short: "Погружение к затонувшему военному кораблю: формат для тех, кто хочет увидеть подводный объект и попробовать дайвинг с инструктором.",
+    shortDescription: "Погружение к затонувшему военному кораблю: формат для тех, кто хочет увидеть подводный объект и попробовать дайвинг с инструктором.",
+    description: "Формат включает выход в море и погружение с инструктором к затонувшему военному кораблю. Обычно старт формируется по набору группы; на отдельных рейсах возможны окна 9:00, 12:00 и 15:00. Погружение и маршрут зависят от погоды, видимости и решения инструктора или организатора."
+  }
+};
+
 async function buildActivitiesCatalog() {
   const contentRecords = await resolveContentRecords();
   const contentRecordLookup = buildRecordLookup(contentRecords);
@@ -1895,7 +1905,8 @@ async function buildActivitiesCatalog() {
       const activityKey = normalizeLookupKey(activity.slug || activity.id);
       const contentRecord = activityKey ? contentRecordLookup.get(activityKey) : null;
       const mergedActivity = applyContentRecord(activity, contentRecord);
-      return { ...mergedActivity, __baseIndex: baseIndex };
+      const finalOverride = finalActivityOverridesBySlug[activityKey];
+      return { ...mergedActivity, ...finalOverride, __baseIndex: baseIndex };
     })
     .filter((activity) => activity.isActive !== false)
     .sort((left, right) => {

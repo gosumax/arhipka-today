@@ -607,6 +607,32 @@ function renderLinks(links) {
   ].join("");
 }
 
+function normalizeEntityDataValue(value = "") {
+  return String(value).toLowerCase().replace(/ё/g, "е").replace(/[^a-zа-я0-9]+/gi, "-").replace(/^-+|-+$/g, "");
+}
+
+function getScenarioCardImageClass(card = {}) {
+  if (card.imageClass) return card.imageClass;
+  const context = [card.entityLabel, card.title, card.routeQuery].filter(Boolean).join(" ").toLowerCase().replace(/ё/g, "е");
+  if (/центральн.*пляж|закат/.test(context)) return "map-sunset-beach-bg";
+  if (/приморск|набереж/.test(context)) return "map-primorsky-bg";
+  if (/гора.*ежик|ежик/.test(context)) return "map-ezhik-bg";
+  if (/михайловск|укреплен/.test(context)) return "map-fort-bg";
+  if (/музей.*хлеб|хлеб.*вин/.test(context)) return "map-museum-bg";
+  if (/подвесн|вулан|мост/.test(context)) return "map-vulan-bridge-bg";
+  return "";
+}
+
+function renderScenarioCardPhoto(card = {}) {
+  const imageClass = getScenarioCardImageClass(card);
+  if (!imageClass) return "";
+  const entityLabel = card.entityLabel || card.title || "";
+  const entityAttrs = entityLabel
+    ? ` role="img" aria-label="${escapeHtml(entityLabel)}" data-entity="${escapeHtml(normalizeEntityDataValue(entityLabel))}"`
+    : ' aria-hidden="true"';
+  return `<div class="scenario-card-photo image-placeholder card-photo ${imageClass} card-photo-lazy"${entityAttrs}></div>`;
+}
+
 function renderBlocks(blocks) {
   return blocks.map((block) => [
     `<section class="service-panel"${block.id ? ` id="${escapeHtml(block.id)}"` : ""}>`,
@@ -615,7 +641,8 @@ function renderBlocks(blocks) {
     Array.isArray(block.items) ? `<ul class="service-list">${block.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : "",
     Array.isArray(block.cards)
       ? `<div class="scenario-grid">${block.cards.map((card) => [
-        `<article class="scenario-card"${card.entityLabel ? ` aria-label="${escapeHtml(card.entityLabel)}" data-entity="${escapeHtml(String(card.entityLabel).toLowerCase().replace(/ё/g, "е").replace(/[^a-zа-я0-9]+/gi, "-").replace(/^-+|-+$/g, ""))}"` : ""}>`,
+        `<article class="scenario-card"${card.entityLabel ? ` aria-label="${escapeHtml(card.entityLabel)}" data-entity="${escapeHtml(normalizeEntityDataValue(card.entityLabel))}"` : ""}>`,
+        renderScenarioCardPhoto(card),
         `<h3>${escapeHtml(card.title || "")}</h3>`,
         card.description ? `<p>${escapeHtml(card.description)}</p>` : "",
         Array.isArray(card.details) && card.details.length
