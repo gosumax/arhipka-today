@@ -65,6 +65,24 @@ const caches = {
   combined: null
 };
 
+const getStaticFallbackWeather = () => ({
+  location: locationName,
+  coordinates,
+  updatedAt: "2026-05-07T09:00:00+03:00",
+  airTemperature: 18,
+  weatherText: "Резервная сводка",
+  windSpeed: 3,
+  windDirection: 90,
+  windGust: 5,
+  seaTemperature: 13,
+  waveHeight: 0.3,
+  seaText: "Небольшая волна",
+  recommendation: "Live-данные временно недоступны: перед морем уточните ветер и волну у капитана.",
+  isFallback: true,
+  isStaticFallback: true,
+  isPartial: true
+});
+
 const contentTypes = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -507,22 +525,7 @@ async function getPublicWeather(url) {
     return payload;
   } catch {
     if (!forceError && caches.combined) return caches.combined;
-    return {
-      location: locationName,
-      coordinates,
-      updatedAt: new Date().toISOString(),
-      airTemperature: null,
-      weatherText: "Сейчас нет данных о погоде",
-      windSpeed: null,
-      windDirection: null,
-      windGust: null,
-      seaTemperature: null,
-      waveHeight: null,
-      seaText: "Данные о море пока недоступны",
-      recommendation: "Сейчас не удалось обновить погоду. Уточните условия перед выходом в море.",
-      isFallback: true,
-      isPartial: true
-    };
+    return getStaticFallbackWeather();
   }
 }
 
@@ -565,7 +568,7 @@ createServer(async (req, res) => {
         status: 200,
         body: JSON.stringify(payload),
         contentType: contentTypes[".json"],
-        cacheControl: "no-cache"
+        cacheControl: "no-store"
       });
       return;
     }

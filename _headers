@@ -5,3 +5,9 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), fullscreen=(self)
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   X-Frame-Options: DENY
+
+/weather-widget.js
+  Cache-Control: public, max-age=300, must-revalidate
+
+/api/public/weather/*
+  Cache-Control: no-store
